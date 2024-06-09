@@ -1,4 +1,4 @@
-task: invalsi_mate_multipla
+task: invalsi_mate_numero
 group:
  - invalsi
 dataset_path: ai4text/Invalsi
