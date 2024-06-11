@@ -1,6 +1,4 @@
-from datasets import disable_caching
 
-disable_caching()
 
 def process_docs(dataset):
     # def _helper(doc):
@@ -89,7 +87,7 @@ def process_docs_ita_multipla(dataset):
 
 def process_docs_ita_binarie(dataset):
 
-    ds = dataset.filter(lambda x: x["tipo"] == "multipla")
+    ds = dataset.filter(lambda x: x["tipo"] == "binaria")
     def _helper(doc):
         prompt = ""
         if doc["testo"] is not None and len(doc["testo"]) > 0:
@@ -97,7 +95,9 @@ def process_docs_ita_binarie(dataset):
         prompt += f"DOMANDA:\n\n{doc['domanda']}\n\nRISPOSTA:"
         doc["prompt"] = prompt
         doc["label"] = 0
-        doc["choices"] = [doc["risposta"], "WRONG"]
+        doc["choices"] = [doc["alt1"], doc["alt2"]]
+        if doc["alt3"] is not None:
+            doc["choices"].append(doc["alt3"])
         return doc
 
     return ds.map(_helper) # returns back a datasets.Dataset object
