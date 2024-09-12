@@ -1,4 +1,4 @@
-task: invalsi_mate_multipla
+task: invalsi_mate_numero
 group:
  - invalsi
 dataset_path: ai4text/Invalsi
@@ -11,4 +11,4 @@ test_split: null
 process_docs: !function utils.process_docs_mate_numero
 doc_to_text: prompt
 doc_to_target: label
-doc_to_choice: choice
+doc_to_choice: choices
