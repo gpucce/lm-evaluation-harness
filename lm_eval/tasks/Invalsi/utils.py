@@ -4,7 +4,7 @@ def process_docs_mate_multipla(dataset):
     ds = dataset.filter(lambda x: x["tipo"] == "multipla")
     def _helper(doc):
         prompt = ""
-        if len(doc["testo"]) > 0:
+        if doc["testo"] is not None and len(doc["testo"]) > 0:
             prompt += f"TESTO:\n\n{doc['testo']}\n\n"
         prompt += f"DOMANDA:\n\n{doc['domanda']}\n\nRISPOSTA:"
         doc["prompt"] = prompt
@@ -19,7 +19,7 @@ def process_docs_mate_verofalso(dataset):
     ds = dataset.filter(lambda x: x["tipo"] == "vero/falso")
     def _helper(doc):
         prompt = ""
-        if len(doc["testo"]) > 0:
+        if doc["testo"] is not None and len(doc["testo"]) > 0:
             prompt += f"TESTO:\n\n{doc['testo']}\n\n"
         prompt += f"DOMANDA:\n\n{doc['domanda']}\n\nRISPOSTA:"
         doc["prompt"] = prompt
@@ -34,7 +34,7 @@ def process_docs_mate_numero(dataset):
     ds = dataset.filter(lambda x: x["tipo"] == "numero")
     def _helper(doc):
         prompt = ""
-        if len(doc["testo"]) > 0:
+        if doc["testo"] is not None and len(doc["testo"]) > 0:
             prompt += f"TESTO:\n\n{doc['testo']}\n\n"
         prompt += f"DOMANDA:\n\n{doc['domanda']}\n\nRISPOSTA:"
         doc["prompt"] = prompt
@@ -65,6 +65,26 @@ def process_docs_mate(dataset):
 
     return ds.map(_helper) # returns back a datasets.Dataset object
 
+def process_docs_mate(dataset):
+    def _helper(doc):
+        prompt = ""
+        if doc["testo"] is not None and len(doc["testo"]) > 0:
+            prompt += f"TESTO:\n\n{doc['testo']}\n\n"
+        prompt += f"DOMANDA:\n\n{doc['domanda']}\n\nRISPOSTA:"
+        doc["prompt"] = prompt
+        if doc["tipo"] == "multipla":
+            doc["label"] = "ABCD".index(doc["risposta"])
+            doc["choice"] = ["A", "B", "C", "D"]
+        elif doc["tipo"] == "vero/falso":
+            doc["label"] = "VF".index(doc["risposta"])
+            doc["choice"] = ["vero", "falso"]
+        elif doc["tipo"] == "numero":
+            doc["label"] = doc["risposta"]
+            doc["choice"] = [doc["risposta"], doc["alt1"], doc["alt2"], doc["alt3"]]
+        return doc
+
+    return dataset.map(_helper) # returns back a datasets.Dataset object
+
 def process_docs_ita_multipla(dataset):
 
     ds = dataset.filter(lambda x: x["tipo"] == "multipla")
@@ -79,6 +99,7 @@ def process_docs_ita_multipla(dataset):
         return doc
 
     return ds.map(_helper) # returns back a datasets.Dataset object
+
 
 def process_docs_ita_binarie(dataset):
 
