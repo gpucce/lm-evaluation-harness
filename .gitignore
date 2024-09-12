@@ -1,3 +1,6 @@
+
+ita_eval_results
+conda_venv
 env
 *.pyc
 output/
