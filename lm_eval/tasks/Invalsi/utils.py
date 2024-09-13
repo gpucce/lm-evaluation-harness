@@ -8,8 +8,8 @@ def process_docs_mate_multipla(dataset):
             prompt += f"TESTO:\n\n{doc['testo']}\n\n"
         prompt += f"DOMANDA:\n\n{doc['domanda']}\n\nRISPOSTA:"
         doc["prompt"] = prompt
-        doc["label"] = int("ABCD".index(doc["risposta"]))
-        doc["choices"] = ["A", "B", "C", "D"]
+        doc["label"] = int("ABCDE".index(doc["risposta"]))
+        doc["choices"] = ["A", "B", "C", "D", "E"]
         return doc
 
     return ds.map(_helper) # returns back a datasets.Dataset object
