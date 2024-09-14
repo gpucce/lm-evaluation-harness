@@ -64,7 +64,7 @@ def process_docs_mate(dataset):
     ds = dataset.filter(lambda x: x["tipo"] in ["multipla", "vero/falso", "numero"])
     def _helper(doc):
         prompt = ""
-        if doc["testo"] is not None len(doc["testo"]) > 0:
+        if doc["testo"] is not None and len(doc["testo"]) > 0:
             prompt += f"TESTO:\n\n{doc['testo']}\n\n"
         prompt += f"DOMANDA:\n\n{doc['domanda']}\n\nRISPOSTA:"
         doc["prompt"] = prompt
