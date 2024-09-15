@@ -299,6 +299,23 @@ def bypass(items):
     return None
 
 
+@register_aggregation("pearson")
+def pearson(items):
+    from scipy.stats import pearsonr
+    unzipped_list = list(zip(*items))
+    golds = unzipped_list[0]
+    preds = unzipped_list[1]
+    return pearsonr(golds, preds)[0]
+
+@register_metric(
+    metric="pearson",
+    higher_is_better=True,
+    output_type="multiple_choice",
+    aggregation="pearson"
+)
+def pearson_fn(items):
+    return items
+
 @register_metric(
     metric="mcc",
     higher_is_better=True,
