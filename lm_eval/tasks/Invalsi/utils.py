@@ -14,21 +14,32 @@ def process_docs_mate_multipla(dataset):
 
     return ds.map(_helper) # returns back a datasets.Dataset object
 
-def process_docs_mate_olimpiadi_multipla(dataset):
+def helper_olimpiadi(doc):
+    prompt = ""
+    if doc["testo"] is not None and len(doc["testo"]) > 0:
+        prompt += f"TESTO:\n\n{doc['testo']}\n\n"
+    prompt += f"DOMANDA:\n\n{doc['domanda']}\n\nRISPOSTA:"
+    doc["prompt"] = prompt
+    doc["label"] = int("ABCDE".index(doc["risposta"]))
+    doc["choices"] = ["A", "B", "C", "D", "E"]
+    return doc
 
+def process_docs_mate_olimpiadi_multipla(dataset):
     ds = dataset.filter(lambda x: x["tipo"] == "multipla")
     ds = ds.filter(lambda x: x["sorgente"] == "olimpiadi")
-    def _helper(doc):
-        prompt = ""
-        if doc["testo"] is not None and len(doc["testo"]) > 0:
-            prompt += f"TESTO:\n\n{doc['testo']}\n\n"
-        prompt += f"DOMANDA:\n\n{doc['domanda']}\n\nRISPOSTA:"
-        doc["prompt"] = prompt
-        doc["label"] = int("ABCDE".index(doc["risposta"]))
-        doc["choices"] = ["A", "B", "C", "D", "E"]
-        return doc
+    return ds.map(helper_olimpiadi) # returns back a datasets.Dataset object
 
-    return ds.map(_helper) # returns back a datasets.Dataset object
+def process_docs_mate_olimpiadi_multipla_b(dataset):
+    ds = dataset.filter(lambda x: x["tipo"] == "multipla")
+    ds = ds.filter(lambda x: x["sorgente"] == "olimpiadi")
+    ds = ds.filter(lambda x: "b" in x["test_id"])
+    return ds.map(helper_olimpiadi) # returns back a datasets.Dataset object
+
+def process_docs_mate_olimpiadi_multipla_t(dataset):
+    ds = dataset.filter(lambda x: x["tipo"] == "multipla")
+    ds = ds.filter(lambda x: x["sorgente"] == "olimpiadi")
+    ds = ds.filter(lambda x: "t" in x["test_id"])
+    return ds.map(helper_olimpiadi) # returns back a datasets.Dataset object
 
 def process_docs_mate_verofalso(dataset):
 
