@@ -498,20 +498,24 @@ def evaluate(
         if (lm.world_size > 1) and (padding_requests[reqtype] > 0):
             for _ in range(padding_requests[reqtype]):
                 cloned_reqs.extend([req] * req.repeats)
+
         if outlier_dim is not None:
             from copy import deepcopy
-            if not hasattr(lm.pretrained, "lm_head"):
+            if not hasattr(lm.model, "lm_head"):
+                for n, p in lm.model.named_parameters():
+                    print(n)
                 raise ValueError("outliers are only supported for model with lm_head")
             # To add the head back if we try and make multiple outliers at once
-            old_lm_head = deepcopy(lm.pretrained.lm_head.weight.data)
-            lm.pretrained.lm_head.weight.data[:outlier_dim, :].zero_()
-            if outlier_dim < lm.pretrained.lm_head.weight.size(0):
-                lm.pretrained.lm_head.weight.data[outlier_dim + 1:, :].zero_()
+            old_lm_head = deepcopy(lm.model.lm_head.weight.data)
+            lm.model.lm_head.weight.data[:outlier_dim, :].zero_()
+            if outlier_dim < lm.model.lm_head.weight.size(0):
+                lm.model.lm_head.weight.data[outlier_dim + 1:, :].zero_()
 
         # run requests through model
         resps = getattr(lm, reqtype)(cloned_reqs)
 
-        lm.pretrained.lm_head.weight.data = old_lm_head.to(lm.pretrained.device)
+        if outlier_dim is not None:
+            lm.model.lm_head.weight.data = old_lm_head.to(lm.model.device)
 
         # put responses from model into a list of length K for each request.
         for x, req in zip(resps, cloned_reqs):

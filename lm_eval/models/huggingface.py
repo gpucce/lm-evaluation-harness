@@ -1115,8 +1115,9 @@ class HFLM(TemplateLM):
                     "labels": batched_conts,
                 }
 
+            _logits = self._model_call(batched_inps, **call_kwargs)
             multi_logits = F.log_softmax(
-                self._model_call(batched_inps, **call_kwargs), dim=-1
+                _logits, dim=-1
             )  # [batch, padding_length (inp or cont), vocab]
 
             for (request_str, ctx_tokens, _), logits, inplen, cont_toks in zip(
