@@ -502,13 +502,12 @@ def evaluate(
         if outlier_dim is not None:
             from copy import deepcopy
             if not hasattr(lm.model, "lm_head"):
-                for n, p in lm.model.named_parameters():
-                    print(n)
                 raise ValueError("outliers are only supported for model with lm_head")
             # To add the head back if we try and make multiple outliers at once
             old_lm_head = deepcopy(lm.model.lm_head.weight.data)
+            assert outlier_dim < lm.model.lm_head.weight.size(0)
             lm.model.lm_head.weight.data[:outlier_dim, :].zero_()
-            if outlier_dim < lm.model.lm_head.weight.size(0):
+            if outlier_dim < (lm.model.lm_head.weight.size(0) - 1):
                 lm.model.lm_head.weight.data[outlier_dim + 1:, :].zero_()
 
         # run requests through model
