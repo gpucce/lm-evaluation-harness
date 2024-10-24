@@ -74,6 +74,7 @@ def simple_evaluate(
     numpy_random_seed: int = 1234,
     torch_random_seed: int = 1234,
     fewshot_random_seed: int = 1234,
+    outlier_dim: Optional[int] = None,
 ):
     """Instantiate and evaluate a model on a list of tasks.
 
@@ -311,6 +312,7 @@ def simple_evaluate(
         apply_chat_template=apply_chat_template,
         fewshot_as_multiturn=fewshot_as_multiturn,
         verbosity=verbosity,
+        outlier_dim=outlier_dim,
     )
 
     if lm.rank == 0:
@@ -369,6 +371,7 @@ def evaluate(
     system_instruction: Optional[str] = None,
     apply_chat_template: Union[bool, str] = False,
     fewshot_as_multiturn: bool = False,
+    outlier_dim: Optional[int] = None,
     verbosity: str = "INFO",
 ):
     """Instantiate and evaluate a model on a list of tasks.
@@ -495,9 +498,20 @@ def evaluate(
         if (lm.world_size > 1) and (padding_requests[reqtype] > 0):
             for _ in range(padding_requests[reqtype]):
                 cloned_reqs.extend([req] * req.repeats)
+        if outlier_dim is not None:
+            from copy import deepcopy
+            if not hasattr(lm.pretrained, "lm_head"):
+                raise ValueError("outliers are only supported for model with lm_head")
+            # To add the head back if we try and make multiple outliers at once
+            old_lm_head = deepcopy(lm.pretrained.lm_head.weight.data)
+            lm.pretrained.lm_head.weight.data[:outlier_dim, :].zero_()
+            if outlier_dim < lm.pretrained.lm_head.weight.size(0):
+                lm.pretrained.lm_head.weight.data[outlier_dim + 1:, :].zero_()
 
         # run requests through model
         resps = getattr(lm, reqtype)(cloned_reqs)
+
+        lm.pretrained.lm_head.weight.data = old_lm_head.to(lm.pretrained.device)
 
         # put responses from model into a list of length K for each request.
         for x, req in zip(resps, cloned_reqs):
@@ -661,6 +675,7 @@ def evaluate(
                 }
                 for task_output, limit in zip(eval_tasks, limits)
             },
+            "outlier_dim": outlier_dim,
         }
         if log_samples:
             results_dict["samples"] = dict(samples)
