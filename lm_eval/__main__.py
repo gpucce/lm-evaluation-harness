@@ -258,7 +258,7 @@ def setup_parser() -> argparse.ArgumentParser:
         help="Sets trust_remote_code to True to execute code to create HF Datasets from the Hub",
     )
     parser.add_argument(
-        "--outlier_dim", type=int, default=None, 
+        "--outlier_dims", type=int, default=None, 
         help="Dimension to use for outlier detection"
     )
     return parser
@@ -408,7 +408,7 @@ def cli_evaluate(args: Union[argparse.Namespace, None] = None) -> None:
         numpy_random_seed=args.seed[1],
         torch_random_seed=args.seed[2],
         fewshot_random_seed=args.seed[3],
-        outlier_dim=args.outlier_dim,
+        outlier_dims=args.outlier_dims,
         **request_caching_args,
     )
 

@@ -74,7 +74,7 @@ def simple_evaluate(
     numpy_random_seed: int = 1234,
     torch_random_seed: int = 1234,
     fewshot_random_seed: int = 1234,
-    outlier_dim: Optional[int] = None,
+    outlier_dims: Optional[int] = None,
 ):
     """Instantiate and evaluate a model on a list of tasks.
 
@@ -312,7 +312,7 @@ def simple_evaluate(
         apply_chat_template=apply_chat_template,
         fewshot_as_multiturn=fewshot_as_multiturn,
         verbosity=verbosity,
-        outlier_dim=outlier_dim,
+        outlier_dims=outlier_dims,
     )
 
     if lm.rank == 0:
@@ -371,7 +371,7 @@ def evaluate(
     system_instruction: Optional[str] = None,
     apply_chat_template: Union[bool, str] = False,
     fewshot_as_multiturn: bool = False,
-    outlier_dim: Optional[int] = None,
+    outlier_dims: Optional[int] = None,
     verbosity: str = "INFO",
 ):
     """Instantiate and evaluate a model on a list of tasks.
@@ -499,21 +499,21 @@ def evaluate(
             for _ in range(padding_requests[reqtype]):
                 cloned_reqs.extend([req] * req.repeats)
 
-        if outlier_dim is not None:
+        if outlier_dims is not None:
             from copy import deepcopy
             if not hasattr(lm.model, "lm_head"):
                 raise ValueError("outliers are only supported for model with lm_head")
             # To add the head back if we try and make multiple outliers at once
             old_lm_head = deepcopy(lm.model.lm_head.weight.data)
-            assert outlier_dim < lm.model.lm_head.weight.size(0)
-            lm.model.lm_head.weight.data[:outlier_dim, :].zero_()
-            if outlier_dim < (lm.model.lm_head.weight.size(0) - 1):
-                lm.model.lm_head.weight.data[outlier_dim + 1:, :].zero_()
+            assert all(i < lm.model.lm_head.weight.size(0) for i in outlier_dims)
+            lm.model.lm_head.weight.zero_()
+            for outlier_dim in outlier_dims:
+                lm.model.lm_head.weight.data[outlier_dim, :] = old_lm_head[outlier_dim, :]
 
         # run requests through model
         resps = getattr(lm, reqtype)(cloned_reqs)
 
-        if outlier_dim is not None:
+        if outlier_dims is not None:
             lm.model.lm_head.weight.data = old_lm_head.to(lm.model.device)
 
         # put responses from model into a list of length K for each request.
@@ -678,7 +678,7 @@ def evaluate(
                 }
                 for task_output, limit in zip(eval_tasks, limits)
             },
-            "outlier_dim": outlier_dim,
+            "outlier_dims": outlier_dims,
         }
         if log_samples:
             results_dict["samples"] = dict(samples)
