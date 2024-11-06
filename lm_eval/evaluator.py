@@ -37,7 +37,8 @@ from lm_eval.utils import (
     positional_deprecated,
     simple_parse_args_string,
 )
-
+from lm_eval.models.vllm_causallms import VLLM
+from lm_eval.models.huggingface import HFLM
 
 if TYPE_CHECKING:
     from lm_eval.api.model import LM
@@ -501,12 +502,16 @@ def evaluate(
 
         if outlier_dims is not None:
             from copy import deepcopy
-            if not hasattr(lm.model, "lm_head"):
+            _is_vllm = isinstance(lm, VLLM)
+            _is_vllm_and_ok = _is_vllm and hasattr(lm.model, "lm_head")
+            _is_hf = isinstance(lm, HFLM)
+            _is_hf_and_ok = _is_hf and hasattr(lm.model, "lm_head")
+            if not (_is_vllm_and_ok or _is_hf_and_ok):
                 raise ValueError("outliers are only supported for model with lm_head")
             # To add the head back if we try and make multiple outliers at once
             old_lm_head = deepcopy(lm.model.lm_head.weight.data)
             assert all(i < lm.model.lm_head.weight.size(0) for i in outlier_dims)
-            lm.model.lm_head.weight.zero_()
+            lm.model.lm_head.weight.data.zero_()
             for outlier_dim in outlier_dims:
                 lm.model.lm_head.weight.data[outlier_dim, :] = old_lm_head[outlier_dim, :]
 
@@ -515,6 +520,7 @@ def evaluate(
 
         if outlier_dims is not None:
             lm.model.lm_head.weight.data = old_lm_head.to(lm.model.device)
+            del old_lm_head
 
         # put responses from model into a list of length K for each request.
         for x, req in zip(resps, cloned_reqs):

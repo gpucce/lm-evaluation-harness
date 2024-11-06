@@ -258,7 +258,7 @@ def setup_parser() -> argparse.ArgumentParser:
         help="Sets trust_remote_code to True to execute code to create HF Datasets from the Hub",
     )
     parser.add_argument(
-        "--outlier_dims", type=int, default=None, 
+        "--outlier_dims", type=int, nargs="+", default=None,
         help="Dimension to use for outlier detection"
     )
     return parser
